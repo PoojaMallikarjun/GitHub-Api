@@ -7,8 +7,8 @@ import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
 import Input from "@material-ui/core/Input";
 import Button from "@material-ui/core/Button";
+import { SearchOutlined } from "@material-ui/icons";
 import Typography from "@material-ui/core/Typography";
-import SearchIcon from "@material-ui/icons/Search";
 import "./App.css";
 
 export default class Home extends Component {
@@ -25,6 +25,7 @@ export default class Home extends Component {
   }
 
   receivedData() {
+    console.log("rec data:", this.state.search);
     console.log("received data");
     axios
       .get(`https://api.github.com/search/users?q=location%3ABangalore`)
@@ -43,7 +44,7 @@ export default class Home extends Component {
             search !== "" &&
             pd.login.toLowerCase().indexOf(search.toLowerCase()) === -1
           ) {
-            return null;
+            return <h1>no users</h1>;
           } else {
             return (
               <Card className="card">
@@ -97,6 +98,11 @@ export default class Home extends Component {
     );
   };
 
+  onClick = (e) => {
+    console.log("on click");
+    this.receivedData();
+  };
+
   onChange = (e) => {
     this.setState({ search: e.target.value });
   };
@@ -106,27 +112,32 @@ export default class Home extends Component {
   }
 
   render() {
+    console.log(this.state);
     return (
       <div className="main">
         <h1>GitHub Users Based In Bangalore</h1>
-        <SearchIcon></SearchIcon>
-        <Input placeholder="Search user" onChange={this.onChange}></Input>
+        <Input placeholder="Search user" onChange={this.onChange}></Input>&nbsp;
+        <Button variant="contained" color="primary" onClick={this.onClick}>
+          <SearchOutlined></SearchOutlined>
+        </Button>
         {this.state.postData}
-        <div className="paginate">
-          <ReactPaginate
-            previousLabel={"prev"}
-            nextLabel={"next"}
-            breakLabel={"..."}
-            breakClassName={"break-me"}
-            pageCount={this.state.pageCount}
-            marginPagesDisplayed={2}
-            pageRangeDisplayed={5}
-            onPageChange={this.handlePageClick}
-            containerClassName={"pagination"}
-            subContainerClassName={"pages pagination"}
-            activeClassName={"active"}
-          />
-        </div>
+        {this.state.search !== "" ? null : (
+          <div className="paginate">
+            <ReactPaginate
+              previousLabel={"prev"}
+              nextLabel={"next"}
+              breakLabel={"..."}
+              breakClassName={"break-me"}
+              pageCount={this.state.pageCount}
+              marginPagesDisplayed={2}
+              pageRangeDisplayed={5}
+              onPageChange={this.handlePageClick}
+              containerClassName={"pagination"}
+              subContainerClassName={"pages pagination"}
+              activeClassName={"active"}
+            />
+          </div>
+        )}
       </div>
     );
   }
