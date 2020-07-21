@@ -20,68 +20,62 @@ export default class Home extends Component {
       perPage: 5,
       currentPage: 0,
       search: "",
+      searchData: "",
     };
     this.handlePageClick = this.handlePageClick.bind(this);
   }
 
-  receivedData() {
-    console.log("rec data:", this.state.search);
-    console.log("received data");
-    axios
-      .get(`https://api.github.com/search/users?q=location%3ABangalore`)
-      .then((res) => {
-        console.log(res);
-        const data = res.data.items;
-        const slice = data.slice(
-          this.state.offset,
-          this.state.offset + this.state.perPage
-        );
-        const search = this.state.search;
-        console.log("search:" + search);
-        const postData = slice.map((pd) => {
-          console.log(pd.login.toLowerCase().indexOf(search.toLowerCase()));
-          if (
-            search !== "" &&
-            pd.login.toLowerCase().indexOf(search.toLowerCase()) === -1
-          ) {
-            return null;
-          } else {
-            return (
-              <Card className="card">
-                <CardActionArea>
-                  <img
-                    className="img"
-                    style={{ height: "140", width: "342" }}
-                    src={pd.avatar_url}
-                    alt=""
-                  />
-                  <CardContent>
-                    <Typography gutterBottom variant="h5" component="h2">
-                      Username: {pd.login}
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-                <CardActions>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    href={pd.html_url}
-                  >
-                    GitHub Link
-                  </Button>
-                </CardActions>
-              </Card>
-            );
-          }
-        });
-        console.log("post data:" + this.postData);
-        this.setState({
-          pageCount: Math.ceil(data.length / this.state.perPage),
-
-          postData,
-        });
+  searchUser() {
+    let searchData = this.state.data.filter((item) => {
+      if (item.login === this.state.search) {
+        return item;
+      } else {
+        return 0;
+      }
+    });
+    if (searchData.length > 0) {
+      console.log(searchData);
+      this.setState({
+        searchData,
       });
+    } else {
+      this.setState({ searchData: "NotFound" });
+    }
   }
+
+  receivedData() {
+    console.log(this.state);
+    const sliceData = this.state.data.slice(
+      this.state.offset,
+      this.state.offset + this.state.perPage
+    );
+
+    return sliceData.map((pd) => {
+      return (
+        <Card className="card">
+          <CardActionArea>
+            <img
+              className="img"
+              style={{ height: "140", width: "342" }}
+              src={pd.avatar_url}
+              alt=""
+            />
+            <CardContent>
+              <Typography gutterBottom variant="h5" component="h2">
+                Username: {pd.login}
+              </Typography>
+            </CardContent>
+          </CardActionArea>
+          <CardActions>
+            <Button variant="contained" color="primary" href={pd.html_url}>
+              GitHub Link
+            </Button>
+          </CardActions>
+        </Card>
+      );
+    });
+  }
+
   handlePageClick = (e) => {
     const selectedPage = e.selected;
     const offset = selectedPage * this.state.perPage;
@@ -100,19 +94,28 @@ export default class Home extends Component {
 
   onClick = (e) => {
     console.log("on click");
-    this.receivedData();
+    this.searchUser();
   };
 
   onChange = (e) => {
     this.setState({ search: e.target.value });
   };
 
-  componentDidMount() {
-    this.receivedData();
+  async componentDidMount() {
+    let res = await axios.get(
+      `https://api.github.com/search/users?q=location%3ABangalore`
+    );
+    this.setState({
+      data: res.data.items,
+      pageCount: Math.ceil(res.data.items.length / this.state.perPage),
+    });
+  }
+
+  reload() {
+    window.location.reload();
   }
 
   render() {
-    console.log(this.state);
     return (
       <div className="main">
         <h1>GitHub Users Based In Bangalore</h1>
@@ -120,6 +123,7 @@ export default class Home extends Component {
         <Button variant="contained" color="primary" onClick={this.onClick}>
           <SearchOutlined></SearchOutlined>
         </Button>
+        {this.state.searchData === "" ? this.receivedData() : null}
         {this.state.postData}
         {this.state.search !== "" ? null : (
           <div className="paginate">
@@ -138,6 +142,44 @@ export default class Home extends Component {
             />
           </div>
         )}
+        {this.state.searchData === "NotFound" ? (
+          <div>
+            <Button variant="contained" color="primary" onClick={this.reload}>
+              BACK
+            </Button>
+            <h1>User not found</h1>
+          </div>
+        ) : this.state.searchData.length > 0 ? (
+          <div>
+            <Button variant="contained" color="primary" onClick={this.reload}>
+              Back
+            </Button>
+            <Card className="card">
+              <CardActionArea>
+                <img
+                  className="img"
+                  style={{ height: "140", width: "342" }}
+                  src={this.state.searchData[0].avatar_url}
+                  alt=""
+                />
+                <CardContent>
+                  <Typography gutterBottom variant="h5" component="h2">
+                    Username: {this.state.searchData[0].login}
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
+              <CardActions>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  href={this.state.searchData[0].html_url}
+                >
+                  GitHub Link
+                </Button>
+              </CardActions>
+            </Card>
+          </div>
+        ) : null}
       </div>
     );
   }
