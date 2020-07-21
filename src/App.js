@@ -44,7 +44,7 @@ export default class Home extends Component {
             search !== "" &&
             pd.login.toLowerCase().indexOf(search.toLowerCase()) === -1
           ) {
-            return <h1>no users</h1>;
+            return null;
           } else {
             return (
               <Card className="card">
